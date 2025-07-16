@@ -1,2 +1,10 @@
 fastapi
 uvicorn[standard]
+sqlalchemy
+psycopg2-binary
+python-dotenv
+python-multipart
+deepface
+opencv-python
+tf-keras
+passlib[bcrypt]>=1.7.4

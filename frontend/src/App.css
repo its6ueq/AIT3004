@@ -1,42 +1,365 @@
-#root {
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 2rem;
-  text-align: center;
+@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap');
+
+:root {
+  --primary-color: #007bff;
+  --primary-hover: #0056b3;
+  --secondary-color: #6c757d;
+  --secondary-hover: #5a6268;
+  --danger-color: #dc3545;
+  --danger-hover: #c82333;
+  --success-color: #28a745;
+  --bg-dark: #212529;
+  --bg-modal: #2a2f35;
+  --text-light: #f8f9fa;
+  --text-muted: #adb5bd;
+  --border-color: #495057;
+  --font-family: 'Roboto', sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: var(--font-family);
+  background-color: var(--bg-dark);
+}
+
+.App {
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+  position: relative;
+}
+
+.video-wrapper {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 1;
+  overflow: hidden;
+  transform: scaleX(-1); 
+}
+
+.background-video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+
+.bounding-box {
+  position: absolute;
+  border: 3px solid var(--primary-color);
+  border-radius: 8px;
+  box-shadow: 0 0 20px rgba(0, 123, 255, 0.5);
+  z-index: 2;
+  /* XÓA transform: scaleX(-1) ở đây */
+  transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.ui-container {
+  position: relative;
+  z-index: 10;
+  color: var(--text-light);
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.App-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 30px;
+  height: 70px;
+  background: linear-gradient(to bottom, rgba(0,0,0,0.8), rgba(0,0,0,0));
+  flex-shrink: 0;
 }
 
 .logo {
-  height: 6em;
-  padding: 1.5em;
-  will-change: filter;
-  transition: filter 300ms;
-}
-.logo:hover {
-  filter: drop-shadow(0 0 2em #646cffaa);
-}
-.logo.react:hover {
-  filter: drop-shadow(0 0 2em #61dafbaa);
+  font-size: 1.5rem;
+  font-weight: 700;
+  letter-spacing: 2px;
 }
 
-@keyframes logo-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
+.App-header nav button {
+  margin-left: 10px;
+  padding: 10px 20px;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  background-color: transparent;
+  color: var(--text-light);
+  border: 2px solid transparent;
+  border-radius: 5px;
+  transition: all 0.2s ease-in-out;
 }
 
-@media (prefers-reduced-motion: no-preference) {
-  a:nth-of-type(2) .logo {
-    animation: logo-spin infinite 20s linear;
-  }
+.App-header nav button:hover {
+  background-color: rgba(255, 255, 255, 0.1);
 }
 
-.card {
-  padding: 2em;
+.App-header nav button.active {
+  border-bottom-color: var(--primary-color);
+  color: var(--primary-color);
+  font-weight: 700;
 }
 
-.read-the-docs {
-  color: #888;
+.scan-result-wrapper {
+  position: absolute;
+  bottom: 80px;
+  left: 30px;
+  max-width: 500px;
+  z-index: 20;
+}
+
+.scan-result {
+  padding: 15px 25px;
+  border-radius: 8px;
+  font-size: 1.2rem;
+  font-weight: 500;
+  color: white;
+  animation: fadeInOut 3s forwards;
+}
+.scan-result.success { background-color: rgba(40, 167, 69, 0.9); }
+.scan-result.error { background-color: rgba(220, 53, 69, 0.9); }
+
+@keyframes fadeInOut {
+  0% { opacity: 0; transform: translateY(20px); }
+  15% { opacity: 1; transform: translateY(0); }
+  85% { opacity: 1; transform: translateY(0); }
+  100% { opacity: 0; transform: translateY(20px); }
+}
+
+.fullscreen-controls {
+  position: absolute;
+  bottom: 20px;
+  right: 30px;
+  z-index: 20;
+}
+.fullscreen-controls button {
+  padding: 10px 15px;
+  background-color: rgba(0,0,0,0.5);
+  border: 1px solid var(--border-color);
+  color: var(--text-light);
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.overlay {
+  position: fixed;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  background-color: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(5px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 100;
+  animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.overlay-content {
+  background-color: var(--bg-modal);
+  padding: 40px;
+  border-radius: 10px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+  border: 1px solid var(--border-color);
+  position: relative;
+  width: 90%;
+  display: flex;
+  flex-direction: column;
+}
+.login-modal { max-width: 400px; }
+.register-modal { max-width: 800px; min-width: 500px; }
+.manage-modal { max-width: 700px; }
+
+.close-btn {
+  position: absolute;
+  top: 15px; right: 15px;
+  background: transparent;
+  border: none;
+  font-size: 2rem;
+  color: var(--secondary-color);
+  cursor: pointer;
+  line-height: 1;
+  transition: transform 0.2s ease;
+}
+.close-btn:hover {
+  transform: scale(1.2);
+  color: var(--text-light);
+}
+
+h2 {
+  margin-bottom: 30px;
+  font-weight: 300;
+  font-size: 2rem;
+  text-align: center;
+  color: var(--text-light);
+}
+
+input[type="text"], input[type="password"] {
+  width: 100%;
+  padding: 12px 15px;
+  background-color: var(--bg-dark);
+  border: 1px solid var(--border-color);
+  border-radius: 5px;
+  color: var(--text-light);
+  font-size: 1rem;
+}
+input[type="text"]:focus, input[type="password"]:focus {
+  outline: none;
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.25);
+}
+
+.btn-primary, .btn-secondary, .btn-danger {
+  padding: 12px 20px;
+  font-size: 1rem;
+  font-weight: 500;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: center;
+}
+
+.btn-primary { background-color: var(--primary-color); color: white; }
+.btn-primary:hover { background-color: var(--primary-hover); }
+.btn-secondary { background-color: var(--secondary-color); color: white; }
+.btn-secondary:hover { background-color: var(--secondary-hover); }
+.btn-danger { background-color: var(--danger-color); color: white; }
+.btn-danger:hover { background-color: var(--danger-hover); }
+
+.status-text { text-align: center; margin-top: 20px; }
+.error-text { color: var(--danger-color); font-weight: 500; }
+
+.register-form {
+  display: flex;
+  flex-direction: column;
+  gap: 25px;
+}
+
+.form-fields {
+  display: flex;
+  gap: 20px;
+}
+.form-fields > * {
+  flex: 1;
+}
+
+.camera-section {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.register-video-container {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  background-color: var(--bg-dark);
+  border-radius: 8px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border: 2px dashed var(--border-color);
+  overflow: hidden;
+}
+
+.placeholder {
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+.preview-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.btn-submit {
+  margin-top: 10px;
+}
+
+.student-list { max-height: 60vh; overflow-y: auto; }
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+th, td {
+  padding: 12px 15px;
+  border-bottom: 1px solid var(--border-color);
+  text-align: left;
+  vertical-align: middle;
+}
+thead {
+  background-color: var(--bg-dark);
+  position: sticky;
+  top: 0;
+}
+tbody tr:hover {
+  background-color: rgba(255,255,255,0.05);
+}
+
+.attendance-history {
+  margin-top: 15px;
+  padding: 10px 20px;
+  background-color: rgba(0, 0, 0, 0.5);
+  border-radius: 8px;
+  font-size: 0.9rem;
+  color: var(--text-muted);
+}
+
+.history-item {
+  display: inline-block;
+  margin-left: 10px;
+  padding: 5px 10px;
+  background-color: var(--secondary-color);
+  color: var(--text-light);
+  border-radius: 5px;
+  font-weight: 500;
+}
+
+.name-tag {
+  position: absolute;
+  bottom: 100%; /* Đặt thẻ tên ở ngay phía trên ô vuông */
+  
+  /* Căn giữa thẻ tên so với ô vuông */
+  left: 50%;
+  transform: translateX(-50%);
+
+  margin-bottom: 10px;
+  background-color: rgba(0, 123, 255, 0.9);
+  color: white;
+  padding: 8px 15px;
+  border-radius: 8px;
+  white-space: nowrap;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+
+  /* QUAN TRỌNG: Lật lại chính thẻ tên để chữ không bị ngược */
+  /* Do thẻ cha của nó là .video-wrapper đã bị lật */
+  transform: translateX(-50%) scaleX(-1); 
+}
+
+.name-tag .name {
+  font-weight: 700;
+  font-size: 1.1rem;
+}
+
+.name-tag .history {
+  font-size: 0.8rem;
+  opacity: 0.8;
 }
