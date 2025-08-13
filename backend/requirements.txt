@@ -7,4 +7,7 @@ python-multipart
 deepface
 opencv-python
 tf-keras
-passlib[bcrypt]>=1.7.4
+passlib[bcrypt]
+bcrypt==3.2.0
+python-jose[cryptography]
+google-generativeai 

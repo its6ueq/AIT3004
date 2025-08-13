@@ -13,3 +13,13 @@ cd AIT3004
 docker-compose up --build
 ```
 
+acc pass admin va teacher co san
+
+
+admin:1
+
+
+teacher01:1
+
+
+*ch sua: note, ui
