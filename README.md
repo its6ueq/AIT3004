@@ -22,4 +22,4 @@ admin:1
 teacher01:1
 
 
-*ch sua: note, ui
+http://localhost:5173/
