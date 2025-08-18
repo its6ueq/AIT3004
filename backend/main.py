@@ -486,13 +486,21 @@ def _record_attendance_logic(student_code: str, classroom_id: int, db: Session):
                      .order_by(models.AttendanceLog.timestamp.desc()).first()
 
     if latest_log and (system_time - latest_log.timestamp < timedelta(minutes=10)):
-        return {"message": "Đã điểm danh gần đây, không cần ghi lại."}
+        return {
+            "status": "SKIPPED", 
+            "message": "Đã điểm danh gần đây, không cần ghi lại.",
+            "timestamp": latest_log.timestamp
+        }
 
-    new_log = models.AttendanceLog(student_id=student.id) 
+    new_log = models.AttendanceLog(student_id=student.id, timestamp=system_time) 
     db.add(new_log)
     db.commit()
     db.refresh(new_log)
-    return new_log
+    return {
+        "status": "RECORDED",
+        "message": "Điểm danh thành công.",
+        "log": new_log
+    }
 
 @app.post("/api/recognize")
 def recognize_face(
@@ -515,13 +523,14 @@ def recognize_face(
         dfs = DeepFace.find(
             img_path=str(temp_file_path),
             db_path=specific_db_path, 
-            model_name='SFace',
+            model_name='Facenet',
             distance_metric='cosine',
             enforce_detection=False,
             silent=True
         )
-        if not isinstance(dfs, list) or not dfs or dfs[0].empty:
-            raise HTTPException(status_code=404, detail="Không tìm thấy khuôn mặt nào khớp.")
+        if not dfs or dfs[0].empty:
+
+            raise HTTPException(status_code=404, detail="Không tìm thấy khuôn mặt nào khớp trong cơ sở dữ liệu.")
 
         best_match = dfs[0].iloc[0]
         identity_path = Path(best_match['identity'])
@@ -532,12 +541,30 @@ def recognize_face(
         if not student:
             raise HTTPException(status_code=404, detail="Sinh viên được nhận dạng nhưng không có trong CSDL của lớp.")
         
-        _record_attendance_logic(student.student_code, student.classroom_id, db)
+        attendance_result = _record_attendance_logic(student.student_code, student.classroom_id, db)
         
-        return {"student_name": student.name, "student_code": student.student_code}
+        response_data = {
+            "student_name": student.name, 
+            "student_code": student.student_code
+        }
+
+        if attendance_result["status"] == "RECORDED":
+            response_data["status"] = "RECORDED"
+            response_data["timestamp"] = attendance_result["log"].timestamp.isoformat()
+        else: # SKIPPED
+            response_data["status"] = "SKIPPED"
+            response_data["timestamp"] = attendance_result["timestamp"].isoformat()
+            
+        return response_data
+        
+    except HTTPException as http_exc:
+        raise http_exc
     except Exception as e:
-        return HTTPException(status_code=500, detail=f"Lỗi trong quá trình nhận dạng: {str(e)}")
+        logger.error(f"Lỗi không xác định trong quá trình nhận dạng: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Lỗi hệ thống trong quá trình nhận dạng: {str(e)}")
+    # <<< KẾT THÚC SỬA Ở ĐÂY
     finally:
+        # Dọn dẹp file tạm
         if os.path.exists(temp_file_path):
             os.remove(temp_file_path)
 
