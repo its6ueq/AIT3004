@@ -24,9 +24,10 @@ services:
     build: ./frontend
     container_name: react_frontend
     ports:
-      - "5173:80"
+      - "5173:5173" # <--- THAY ĐỔI Ở ĐÂY (từ 80 thành 5173)
     volumes:
-      - ./frontend/src:/app/src
+      - ./frontend:/app # <--- Map cả thư mục để hot-reload
+      - /app/node_modules # <--- Ngăn không cho node_modules trên máy host ghi đè
     depends_on:
       backend:
         condition: service_healthy

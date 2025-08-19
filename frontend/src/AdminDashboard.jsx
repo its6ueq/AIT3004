@@ -3,13 +3,15 @@ import { useNavigate } from "react-router-dom";
 import ReactMarkdown from "react-markdown";
 import "./Dashboard.css";
 
-const getToken = () => localStorage.getItem("admin_token");
-
-const getAuthHeaders = () => ({
-  Authorization: `Bearer ${getToken()}`,
-  "Content-Type": "application/json",
-});
-
+const getAuthHeaders = () => {
+  const token =
+    localStorage.getItem("admin_token") ||
+    localStorage.getItem("teacher_token");
+  return {
+    Authorization: `Bearer ${token}`,
+    "Content-Type": "application/json",
+  };
+};
 const formatDate = (dateString) => {
   const date = new Date(dateString);
   return date.toLocaleDateString("vi-VN", {
@@ -340,7 +342,9 @@ function AdminDashboard() {
         `/api/admin/attendance-grid/${selectedClassroom}`,
         { headers: getAuthHeaders() }
       );
-      setGridData(await gridRes.json());
+      if (gridRes.ok) {
+        setGridData(await gridRes.json());
+      }
     } catch (err) {
       setMessage(`Lỗi: ${err.message}`);
     } finally {

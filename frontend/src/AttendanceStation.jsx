@@ -1,5 +1,6 @@
 import React, { useState, useRef, useCallback, useEffect } from "react";
-import * as tf from "@tensorflow/tfjs";
+import * as tf from "@tensorflow/tfjs-core";
+import "@tensorflow/tfjs-backend-webgl"; 
 import * as faceDetection from "@tensorflow-models/face-detection";
 import "./App.css";
 import { useNavigate } from "react-router-dom";

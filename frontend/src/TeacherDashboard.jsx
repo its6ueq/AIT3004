@@ -106,6 +106,7 @@ function TeacherDashboard() {
     try {
       const res = await fetch("/api/attendance-note", {
         method: "POST",
+        headers: getAuthHeaders(),
         body: JSON.stringify({
           student_id: currentNoteCell.student.student_id,
           class_date: currentNoteCell.date,
@@ -117,7 +118,9 @@ function TeacherDashboard() {
       const gridRes = await fetch("/api/teacher/attendance-grid", {
         headers: getAuthHeaders(),
       });
-      if (gridRes.ok) setGridData(await gridRes.json());
+      if (gridRes.ok) {
+        setGridData(await gridRes.json());
+      }
     } catch (err) {
       setMessage(`Lỗi: ${err.message}`);
     } finally {

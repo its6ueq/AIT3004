@@ -9,6 +9,9 @@ cd AIT3004
 ```
 
 
+Tạo file ``.env`` trong ``frontend`` với nội dung ``VITE_APP_CLASSROOM_ID=1``
+
+
 ```
 docker-compose up --build
 ```

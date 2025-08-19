@@ -15,6 +15,7 @@ from deepface import DeepFace
 from jose import JWTError, jwt
 from fastapi.security import OAuth2PasswordBearer 
 
+import uuid
 import requests
 import logging
 import models
@@ -163,6 +164,14 @@ class NoteUpdateRequest(BaseModel):
     student_id: int
     class_date: date
     note: str
+    
+class AdminClassroomCreate(BaseModel):
+    name: str
+
+class AdminTeacherCreate(BaseModel):
+    username: str
+    password: str
+    classroom_id: int
     
 def generate_daily_status_logs(student: models.Student, db: Session) -> List[dict]:
     schedules = db.query(models.Schedule)\
@@ -510,7 +519,14 @@ def recognize_face(
 ):
     temp_dir = Path("temp")
     temp_dir.mkdir(exist_ok=True)
-    temp_file_path = temp_dir / file.filename
+
+    # --- BẮT ĐẦU THAY ĐỔI ---
+    # Tạo tên file duy nhất để tránh xung đột
+    file_extension = Path(file.filename).suffix
+    unique_filename = f"{uuid.uuid4()}{file_extension}"
+    temp_file_path = temp_dir / unique_filename
+    # --- KẾT THÚC THAY ĐỔI ---
+
     with open(temp_file_path, "wb") as buffer:
         shutil.copyfileobj(file.file, buffer)
 
@@ -529,7 +545,6 @@ def recognize_face(
             silent=True
         )
         if not dfs or dfs[0].empty:
-
             raise HTTPException(status_code=404, detail="Không tìm thấy khuôn mặt nào khớp trong cơ sở dữ liệu.")
 
         best_match = dfs[0].iloc[0]
@@ -562,7 +577,6 @@ def recognize_face(
     except Exception as e:
         logger.error(f"Lỗi không xác định trong quá trình nhận dạng: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Lỗi hệ thống trong quá trình nhận dạng: {str(e)}")
-    # <<< KẾT THÚC SỬA Ở ĐÂY
     finally:
         # Dọn dẹp file tạm
         if os.path.exists(temp_file_path):
@@ -880,7 +894,6 @@ def update_attendance_note(
         new_log = models.AttendanceLog(
             student_id=request.student_id,
             timestamp=datetime.combine(request.class_date, datetime.min.time()),
-            status="ABSENT_WITH_NOTE", 
             note=request.note
         )
         db.add(new_log)
@@ -949,3 +962,46 @@ def get_attendance_grid_data_logic(classroom_id: int, db: Session):
         attendance_data.append(student_grid_data)
 
     return {"scheduled_dates": scheduled_dates, "attendance_data": attendance_data}
+
+@app.post("/api/admin/classrooms", response_model=ClassroomResponse, status_code=status.HTTP_201_CREATED)
+def create_classroom_for_admin(
+    classroom_data: AdminClassroomCreate,
+    db: Session = Depends(get_db),
+    admin: models.Admin = Depends(get_current_admin)
+):
+    """
+    [Admin Only] Tạo một lớp học mới từ dữ liệu JSON.
+    """
+    existing_classroom = db.query(models.Classroom).filter(models.Classroom.name == classroom_data.name).first()
+    if existing_classroom:
+        raise HTTPException(status_code=400, detail=f"Tên lớp '{classroom_data.name}' đã tồn tại.")
+
+    new_classroom = models.Classroom(name=classroom_data.name)
+    db.add(new_classroom)
+    db.commit()
+    db.refresh(new_classroom)
+    return new_classroom
+
+@app.post("/api/admin/teachers", response_model=TeacherResponse, status_code=status.HTTP_201_CREATED)
+def create_teacher_for_admin(
+    teacher_data: AdminTeacherCreate,
+    db: Session = Depends(get_db),
+    admin: models.Admin = Depends(get_current_admin)
+):
+    """
+    [Admin Only] Tạo một giáo viên mới.
+    """
+    existing_teacher = db.query(models.Teacher).filter(models.Teacher.username == teacher_data.username).first()
+    if existing_teacher:
+        raise HTTPException(status_code=400, detail="Tên đăng nhập của giáo viên đã tồn tại.")
+
+    hashed_password = security.hash_password(teacher_data.password)
+    new_teacher = models.Teacher(
+        username=teacher_data.username,
+        hashed_password=hashed_password,
+        classroom_id=teacher_data.classroom_id
+    )
+    db.add(new_teacher)
+    db.commit()
+    db.refresh(new_teacher)
+    return new_teacher
